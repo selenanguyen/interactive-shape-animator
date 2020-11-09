@@ -1,12 +1,27 @@
-# Assignment 7
+# Interactive Shape Animator
+## Description
+This program runs an interactive shape animator, done for an assignment in Object Oriented Design. The program takes an input file (examples found in <code>/resources</code>) and offers different modes to run the animation.
 
-<h3>Run the Program</h3>
-Using a command-prompt/terminal, navigate to <code>\<projectRoot>/resources</code>.
-<br /><br />
-Replacing the proper arguments, enter: <code>java -jar Animation.jar -in NameOfInputFile -view ViewType -out 
-NameOfOutputFile -speed Speed</code>
+## Run the Program
+### Steps
+1. Using a command-prompt/terminal, navigate to <code><projectRoot>/resources</code>
+2. Replacing proper arguments, enter: <code>java -jar Animation.jar -in NameOfInputFile -view ViewType -out NameOfOutputFile -speed Speed</code>
+  
+### Arguments
+  - <i>in</i>: input file (ex: <code>toh-3.txt</code>)
+  - <i>out</i>: name of output file; only required for svg or text views (ex: <code>buildingsOut.txt</code>)
+  - <i>view</i>: (options)
+    - <code>text</code> - outputs a text file representing the animation (ex: <code>/resources/buildingsOut.txt</code>)
+    - <code>svg</code> - outputs an svg file for the animation (example: <code>/resources/simple-example.svg</code>)
+    - <code>visual</code> - plays the animation at the given speed
+    - <code>edit</code> - runs an editable animator, where you can add and edit shapes, keyframes, speeds, etc.
+  - <i>speed</i>: speed to play animation, in (integer) ticks per second
 
-<h3>Our Model</h3>
+### Example command
+  <code>java -jar Animation.jar -in toh-3.txt -view edit -speed 20</code>
+
+## Design and Process
+### Our Model
 ![Class diagram](https://d1b10bmlvqabco.cloudfront.net/attach/k3z1ghrz7630h/jc6oeh9j3kx36m/k7z678ligq0g/IMG_0368.jpg)
 The idea behind our model design stemmed from the relationship between shapes and actions. 
 We wanted to plan our animator to be able to keep track of large and long running animators and 
@@ -34,7 +49,7 @@ An Action class had start and end properties. The action class can provide all p
 given tick, calculated using some basic math. Our AnimatedShape class keeps a list of actions per 
 shape, and can retrieve a state at a given tick (from Action) and apply it to the shape.
 
-<h3>Our View</h3>
+### Our View
 
 Our view is provided a read-only model to display in different forms. We decided to provide a 
 hierarchy of views. IAnimationView is the highest-level view, extended by TextualView and 
@@ -43,7 +58,7 @@ offers public access necessary for the controller to interact with the JFrame. O
 implementation of IAnimationView has no methods because we could not find common methods among 
 our TextualView and VisualView. However, we kept the interface for use in the future. 
 
-<h3>Our Controller</h3>
+### Our Controller
 
 Our controller relays information between the model and the view. The model provided to the controller
 is muutable due to fact that editing of the animation is enabled. The controller implements Action 
@@ -61,7 +76,7 @@ The actions available to the user delegated by the Controller :
 * Load File
 * Save to File
 
-<h3>Changes to the Model in Assignment 6</h3>
+### Changes to the Model in Assignment 6
 <u>Interfaces added</u>
 * ReadOnlyAnimationOperations
 
@@ -84,7 +99,7 @@ accessible in order to implement the view. We also added a readonly interface fo
 so that the view had restricted access and could not make actual changes to the model. We were also
 careful to return only copies of shapes so that they could not be mutated from outside the model.
 
-<h3>Changes to the Model in Assignment 7</h3>
+### Changes to the Model in Assignment 7
 Previously, the object Keyframe lived in the model package but we moved it to the controller 
 package where it was more relevant. The AnimatedShape object was change to keep track of a list of 
 Keyframes. AnimatedShapes could now be constructed with either a list of action or a list of 
@@ -95,7 +110,7 @@ let the users make changes directly into the model from our Animator.
 
 We also made a minor change to allow the canvas dimensions to be negative.
 
-<h3>Changes to the View in Assignment 7</h3>
+### Changes to the View in Assignment 7
 To accommodate a more interactive view for the user, we added an InteractiveView extending JFrame 
 and implementing an IInteractiveView interface and ActionListener. This view mainly consisted of 
 buttons, text fields, combo boxes, and an AnimationPanel. The JFrame components were given an 
