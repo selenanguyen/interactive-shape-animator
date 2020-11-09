@@ -31,7 +31,8 @@ public class AnimationReader {
    * @param <Doc>    The main model interface type describing animations
    * @return
    */
-  public static <Doc> Doc parseFile(Readable readable, AnimationBuilder<Doc> builder) {
+  public static <Doc> Doc parseFile(Readable readable, AnimationBuilder<Doc> builder,
+                                    boolean canRotate, boolean hasLayers) {
     Objects.requireNonNull(readable, "Must have non-null readable source");
     Objects.requireNonNull(builder, "Must provide a non-null AnimationBuilder");
     Scanner s = new Scanner(readable);
@@ -44,10 +45,10 @@ public class AnimationReader {
           readCanvas(s, builder);
           break;
         case "shape":
-          readShape(s, builder);
+          readShape(s, builder, hasLayers);
           break;
         case "motion":
-          readMotion(s, builder);
+          readMotion(s, builder, canRotate);
           break;
         default:
           throw new IllegalStateException("Unexpected keyword: " + word + s.nextLine());
@@ -65,9 +66,10 @@ public class AnimationReader {
     builder.setBounds(vals[0], vals[1], vals[2], vals[3]);
   }
 
-  private static <Doc> void readShape(Scanner s, AnimationBuilder<Doc> builder) {
+  private static <Doc> void readShape(Scanner s, AnimationBuilder<Doc> builder, boolean hasLayers) {
     String name;
     String type;
+    int layer = 0;
     if (s.hasNext()) {
       name = s.next();
     } else {
@@ -78,33 +80,57 @@ public class AnimationReader {
     } else {
       throw new IllegalStateException("Shape: Expected a type, but no more input available");
     }
-    builder.declareShape(name, type);
+    if (hasLayers) {
+      layer = getInt(s, "Shape", "layer");
+    }
+    builder.declareShape(name, type, layer);
   }
 
-  private static <Doc> void readMotion(Scanner s, AnimationBuilder<Doc> builder) {
-    String[] fieldNames = new String[]{
-      "initial time",
-      "initial x-coordinate", "initial y-coordinate",
-      "initial width", "initial height",
-      "initial red value", "initial green value", "initial blue value",
-      "final time",
-      "final x-coordinate", "final y-coordinate",
-      "final width", "final height",
-      "final red value", "final green value", "final blue value",
-    };
-    int[] vals = new int[16];
+  private static <Doc> void readMotion(Scanner s,
+                                       AnimationBuilder<Doc> builder, boolean canRotate) {
+    String[] fieldNames = canRotate
+            ? new String[] {
+              "initial time",
+              "initial x-coordinate", "initial y-coordinate",
+              "initial width", "initial height",
+              "initial red value", "initial green value", "initial blue value",
+              "initial rotation",
+              "final time",
+              "final x-coordinate", "final y-coordinate",
+              "final width", "final height",
+              "final red value", "final green value", "final blue value", "final rotation"
+            }
+            : new String[]{
+              "initial time",
+              "initial x-coordinate", "initial y-coordinate",
+              "initial width", "initial height",
+              "initial red value", "initial green value", "initial blue value",
+              "final time",
+              "final x-coordinate", "final y-coordinate",
+              "final width", "final height",
+              "final red value", "final green value", "final blue value",
+            };
+    int[] vals = canRotate ? new int[18] : new int[16];
     String name;
     if (s.hasNext()) {
       name = s.next();
     } else {
       throw new IllegalStateException("Motion: Expected a shape name, but no more input available");
     }
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < (canRotate ? 18 : 16); i++) {
       vals[i] = getInt(s, "Motion", fieldNames[i]);
     }
-    builder.addMotion(name,
-            vals[0], vals[1], vals[2 ], vals[3 ], vals[4 ], vals[5 ], vals[6 ], vals[7 ],
-            vals[8], vals[9], vals[10], vals[11], vals[12], vals[13], vals[14], vals[15]);
+    if (canRotate) {
+      builder.addMotion(name,
+              vals[0], vals[1], vals[2 ], vals[3 ], vals[4 ], vals[5 ], vals[6 ], vals[7 ],
+              vals[8], vals[9], vals[10], vals[11], vals[12], vals[13], vals[14], vals[15],
+              vals[16], vals[17]);
+    }
+    else {
+      builder.addMotion(name,
+              vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7],
+              vals[8], vals[9], vals[10], vals[11], vals[12], vals[13], vals[14], vals[15]);
+    }
   }
   
   private static int getInt(Scanner s, String label, String fieldName) {

@@ -67,8 +67,8 @@ public class AnimationModelTest {
     o1h3 = 40;
     o1c3 = new Color(25, 25, 25);
     int o1t3 = 6;
-    oval1 = new Oval(oval1id);
-    rect1 = new Rectangle(rect1id);
+    oval1 = new Oval(oval1id, 0);
+    rect1 = new Rectangle(rect1id, 0);
     Position r1p1 = new Position(10, 20);
     r1p2 = new Position(10, 20);
     r1p3 = new Position(15, 25);
@@ -84,8 +84,8 @@ public class AnimationModelTest {
     r1t1 = 1;
     r1t2 = 5;
     r1t3 = 10;
-    oval1 = new Oval(oval1id);
-    rect1 = new Rectangle(rect1id);
+    oval1 = new Oval(oval1id, 0);
+    rect1 = new Rectangle(rect1id, 0);
     this.model.addShape(oval1);
     this.model.addShape(rect1);
     this.model.addAction(oval1id, new Action(o1p1, o1p2, o1w1, o1w2, o1h1, o1h2,
@@ -174,14 +174,14 @@ public class AnimationModelTest {
     this.model.applyTick(6);
     shapes = this.model.getShapesAt(6);
     assertEquals(this.model.getShape(rect1id), shapes.get(1));
-    assertEquals(new Oval(oval1id, o1h3, o1w3, o1c3, o1p3), this.model.getShape(oval1id));
+    assertEquals(new Oval(oval1id, o1h3, o1w3, o1c3, o1p3, 0, 0), this.model.getShape(oval1id));
     this.model.applyTick(7);
     assertEquals(new Rectangle(rect1id, r1h2 + 2, r1w2 + 2,
-            new Color(32, 32, 32), new Position(12, 22)),
+            new Color(32, 32, 32), new Position(12, 22), 0, 0),
             this.model.getShape(rect1id));
     this.model.applyTick(11);
     assertEquals(new Oval(oval1id, 45, 10, new Color(30, 30, 30),
-            new Position(25, 45)), this.model.getShape(oval1id));
+            new Position(25, 45), 0, 0), this.model.getShape(oval1id));
     this.model.applyTick(15);
     assertFalse(this.model.getShape(rect1id).isInvisible());
     assertTrue(this.model.getShape(oval1id).isInvisible());

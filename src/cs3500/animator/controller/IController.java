@@ -12,59 +12,53 @@ public interface IController extends ActionListener {
    * Starts the animation.
    * Displays the view in the controller.
    */
-  public void start();
+  void start();
 
   /**
    * Returns the speed of the animation currently.
    * @return the speed
    */
-  public int getSpeed();
-
-  /**
-   * Sets the name of the shape to be added.
-   * @param id the shape id
-   */
-  public void setAddShapeId(String id);
+  int getSpeed();
 
   /**
    * Removes the shape with the given id.
    * @param id the shape id
    */
-  public void removeShape(String id);
+  void removeShape(String id);
 
 
   /**
    * Sets the speed of the animation.
    * @param ticksPerSecond ticks per second
    */
-  public void setSpeed(String ticksPerSecond);
+  void setSpeed(String ticksPerSecond);
 
   /**
    * Increments or decrements the tick by 1.
    * @param inc the increment (1 or -1)
    */
-  public void incrementTick(int inc);
+  void incrementTick(int inc);
 
   /**
    * Sets the tick.
    * @param tick the tick
    */
-  public void setTick(int tick);
+  void setTick(int tick);
 
-  public void pause();
+  void pause();
 
   /**
    * Removes the keyframe at the given tick for the shape with the given id.
    * @param id the shape id
    * @param tick the tick
    */
-  public void removeKeyframe(String id, int tick);
+  void removeKeyframe(String id, int tick);
 
-  public void replaceKeyframe(String id, String c, String p, String w, String h, int tick);
+  void replaceKeyframe(String id, String c, String p, String rot, String w, String h, int tick);
 
-  public void displayError(String errorMessage);
+  void displayError(String errorMessage);
 
-  public void displaySuccess(String message);
+  void displaySuccess(String message);
 
   /**
    * Adds a keyframe to the given shape.
@@ -75,6 +69,12 @@ public interface IController extends ActionListener {
    * @param h the height as a string (integer)
    * @param tick the tick as an int
    */
-  public void addKeyframe(String id, String c, String p, String w, String h, int tick);
+  void addKeyframe(String id, String c, String p, String rot, String w, String h, int tick);
+
+  void addShape(String type, String id, String layer);
+
+  void removeLayer(String layer);
+
+  void switchLayers(String l1, String l2);
 
 }

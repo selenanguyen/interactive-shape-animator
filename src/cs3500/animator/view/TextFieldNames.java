@@ -15,9 +15,13 @@ public enum TextFieldNames {
   WIDTH_ADD_KEYFRAME("Width: "),
   HEIGHT_ADD_KEYFRAME("Height: "),
   COLOR_ADD_KEYFRAME("Color (R,G,B): "),
-
+  ROTATION_ADD_KEYFRAME("Rotation: "),
   LOAD_FILE("Load file:"),
-  SAVE_FILE("Ssave to:");
+  SAVE_FILE("Save to:"),
+  LAYER_ADD_SHAPE("Layer: "),
+  LAYER_REMOVE("Layer: "),
+  LAYER1_SWITCH("Layer 1: "),
+  LAYER2_SWITCH("Layer 2: ");
 
 
   private final String name;

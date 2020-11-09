@@ -24,6 +24,8 @@ public enum ButtonNames {
   ADD_KEYFRAME("Add"),
   REMOVE_KEYFRAME("Remove"),
   SAVE("Save"),
+  SWITCH_LAYERS("Switch Layers"),
+  REMOVE_LAYER("Remove Layer"),
   LOAD("Load File");
 
   private final String name;

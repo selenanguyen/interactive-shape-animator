@@ -7,20 +7,20 @@ import cs3500.animator.view.TextualView;
  */
 public class Oval extends AbstractShape {
 
-  public Oval(String id) {
-    super(id);
+  public Oval(String id, int layer) {
+    super(id, layer);
   }
 
-  public Oval(String id, int height, int width, Color color, Position p) {
-    super(id, height, width, color, p);
+  public Oval(String id, int height, int width, Color color, Position p, int rot, int layer) {
+    super(id, height, width, color, p, rot, layer);
   }
 
   @Override
   public Shape cloneShape() {
     if (!this.isVisible) {
-      return new Oval(id);
+      return new Oval(id, layer);
     }
-    return new Oval(id, height, width, color, position);
+    return new Oval(id, height, width, color, position, rotation, layer);
   }
 
   @Override
@@ -31,19 +31,6 @@ public class Oval extends AbstractShape {
   @Override
   public String getShapeAsString(TextualView view) {
     return view.getOvalAsString();
-  }
-
-  @Override
-  public Shape makeCopy() {
-    Shape copy;
-    if (isVisible) {
-      copy = new Oval(this.getId(), this.getHeight(), this.getWidth(),
-              this.getColor(), this.getPosition());
-    }
-    else {
-      copy = new Oval(this.getId());
-    }
-    return copy;
   }
 
   @Override

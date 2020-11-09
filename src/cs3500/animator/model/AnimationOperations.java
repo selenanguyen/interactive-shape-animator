@@ -67,6 +67,12 @@ public interface AnimationOperations extends ReadOnlyAnimationOperations {
    * Adds an animated shape to the model.
    * @param animatedShape animated shape to be added to the model
    */
-  public void addAnimatedShape(IAnimatedShape animatedShape);
+  void addAnimatedShape(IAnimatedShape animatedShape);
+
+  void editKeyframe(String id, Keyframe kf);
+
+  void removeLayer(int l);
+
+  void switchLayers(int l1, int l2);
 
 }

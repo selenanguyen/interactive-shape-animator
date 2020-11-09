@@ -29,14 +29,14 @@ public class AnimationControllerTest {
   public void setup() {
     this.speed = 10;
     this.model = new AnimationModel();
-    this.view = new InteractiveView(model,speed);
+    this.view = new InteractiveView(model,speed, false, false);
 
     Color red = new Color(255, 0, 0);
     Color green = new Color(0, 255, 0);
     Position p1 = new Position(250, 250);
     Position p2 = new Position(200, 200);
-    Shape oval = new Oval("circle1");
-    Shape rect = new Rectangle("rect1");
+    Shape oval = new Oval("circle1", 0);
+    Shape rect = new Rectangle("rect1", 0);
     Action actionRect = new Action(p2, p1, 20, 10, 20, 10,
             green, red, 5, 30);
     Action actionOval1 = new Action(p1, p2,

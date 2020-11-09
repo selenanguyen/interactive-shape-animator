@@ -63,6 +63,7 @@ public class AnimationModel implements AnimationOperations {
     this.x = x;
     this.y = y;
     this.shapes = shapes;
+    this.sortByLayer();
   }
 
   /**
@@ -93,8 +94,8 @@ public class AnimationModel implements AnimationOperations {
     }
 
     @Override
-    public AnimationBuilder<AnimationModel> declareShape(String name, String type) {
-      Shape s = type.equals("ellipse") ? new Oval(name) : new Rectangle(name);
+    public AnimationBuilder<AnimationModel> declareShape(String name, String type, int layer) {
+      Shape s = type.equals("ellipse") ? new Oval(name, layer) : new Rectangle(name, layer);
       shapes.add(new AnimatedShape(s));
       return this;
     }
@@ -104,8 +105,24 @@ public class AnimationModel implements AnimationOperations {
                                                            int w1, int h1, int r1, int g1, int b1,
                                                            int t2, int x2, int y2, int w2, int h2,
                                                            int r2, int g2, int b2) {
-      Action a = new Action(new Position(x1, y1), new Position(x2, y2), w1, w2, h1,
-              h2, new Color(r1, g1, b1), new Color(r2, g2, b2), t1, t2);
+      return addMotionHelp(name, new Action(new Position(x1, y1), new Position(x2, y2), w1, w2, h1,
+              h2, new Color(r1, g1, b1), new Color(r2, g2, b2), t1, t2));
+    }
+
+    @Override
+    public AnimationBuilder<AnimationModel> addMotion(String name, int t1, int x1, int y1,
+                                                      int w1, int h1, int r1, int g1, int b1,
+                                                      int rot1,
+                                                      int t2, int x2, int y2, int w2, int h2,
+                                                      int r2, int g2, int b2, int rot2) {
+      return addMotionHelp(name, new Action(new Position(x1, y1), new Position(x2, y2), w1, w2, h1,
+              h2, new Color(r1, g1, b1), new Color(r2, g2, b2), rot1, rot2, t1, t2));
+    }
+
+    private AnimationBuilder<AnimationModel> addMotionHelp(String name, Action a) {
+      if (a.getStartTick() == a.getEndTick() && !a.isTeleportedFrom(a)) {
+        return this;
+      }
       for (IAnimatedShape s : this.shapes) {
         if (s.getId().equals(name)) {
           s.addAction(a);
@@ -157,6 +174,7 @@ public class AnimationModel implements AnimationOperations {
   public void addShape(Shape shape) {
     validateAddShape(shape);
     this.shapes.add(new AnimatedShape(shape));
+    this.sortByLayer();
   }
 
   @Override
@@ -205,6 +223,11 @@ public class AnimationModel implements AnimationOperations {
     for (IAnimatedShape shape : this.shapes) {
       shape.applyTick(tick);
     }
+  }
+
+  @Override
+  public void editKeyframe(String id, Keyframe kf) {
+    this.getTrueAnimatedShape(id).editKeyframe(kf);
   }
 
   @Override
@@ -351,6 +374,47 @@ public class AnimationModel implements AnimationOperations {
   @Override
   public int getTick() {
     return this.tick;
+  }
+
+  /**
+   * Sorts the list of animated shapes by layer.
+   */
+  private void sortByLayer() {
+    this.shapes.sort((s1, s2) -> -1 * (Integer.compare(s1.getLayer(), s2.getLayer())));
+  }
+
+  @Override
+  public void removeLayer(int l) {
+    if (!this.shapes.removeIf((s) -> s.getLayer() == l)) {
+      throw new IllegalArgumentException("Layer " + l + " does not exist");
+    }
+  }
+
+  @Override
+  public void switchLayers(int l1, int l2) {
+    List<IAnimatedShape> l1s = new ArrayList<>();
+    List<IAnimatedShape> l2s = new ArrayList<>();
+    if (l1 == l2) {
+      throw new IllegalArgumentException("Layer cannot be switched with itself");
+    }
+    for (IAnimatedShape s : this.shapes) {
+      if (s.getLayer() == l1) {
+        l1s.add(s);
+      }
+      else if (s.getLayer() == l2) {
+        l2s.add(s);
+      }
+    }
+    if (l1s.isEmpty() || l2s.isEmpty()) {
+      throw new IllegalArgumentException("At least one of these layers does not exist.");
+    }
+    for (IAnimatedShape s : l1s) {
+      s.setLayer(l2);
+    }
+    for (IAnimatedShape s : l2s) {
+      s.setLayer(l1);
+    }
+    this.sortByLayer();
   }
 
 }

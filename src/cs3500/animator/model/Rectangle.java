@@ -7,22 +7,21 @@ import cs3500.animator.view.TextualView;
  */
 public class Rectangle extends AbstractShape {
 
-  protected String shapeAsString = "Rectangle";
-
-  public Rectangle(String id) {
-    super(id);
+  public Rectangle(String id, int layer) {
+    super(id, layer);
   }
 
-  public Rectangle(String id, int height, int width, Color color, Position p) {
-    super(id, height, width, color, p);
+  public Rectangle(String id, int height, int width, Color color, Position p,
+                   int rot, int layer) {
+    super(id, height, width, color, p, rot, layer);
   }
 
   @Override
   public Shape cloneShape() {
     if (!this.isVisible) {
-      return new Rectangle(id);
+      return new Rectangle(id, layer);
     }
-    return new Rectangle(id, height, width, color, position);
+    return new Rectangle(id, height, width, color, position, rotation, layer);
   }
 
   @Override
@@ -33,19 +32,6 @@ public class Rectangle extends AbstractShape {
   @Override
   public String getShapeAsString(TextualView view) {
     return view.getRectangleAsString();
-  }
-
-  @Override
-  public Shape makeCopy() {
-    Shape copy;
-    if (isVisible) {
-      copy = new Rectangle(this.getId(), this.getHeight(), this.getWidth(),
-              this.getColor(), this.getPosition());
-    }
-    else {
-      copy = new Rectangle(this.getId());
-    }
-    return copy;
   }
 
   @Override

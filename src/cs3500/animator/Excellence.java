@@ -1,5 +1,7 @@
 package cs3500.animator;
 
+import cs3500.animator.adapter.Controller;
+import cs3500.animator.adapter.IModel;
 import cs3500.animator.controller.AnimationController;
 import cs3500.animator.controller.IController;
 import cs3500.animator.model.AnimationModel;
@@ -19,7 +21,6 @@ import javax.swing.JOptionPane;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.Timer;
 
 /**
  * Main method to build model and run the view.
@@ -36,6 +37,8 @@ public final class Excellence {
     String inputFileName = null;
     String viewType = null;
     String outputFileName = "default";
+    boolean hasLayers = false;
+    boolean canRotate = false;
     TextualView textView;
     VisualView visualView;
     IInteractiveView interactiveView;
@@ -60,6 +63,12 @@ public final class Excellence {
           integerTicksPerSecond = Integer.parseInt(args[i + 1]);
           i++;
           break;
+        case "-rotate":
+          canRotate = true;
+          break;
+        case "-layer":
+          hasLayers = true;
+          break;
         default:
           JOptionPane.showMessageDialog(frame,
                   "Command line argument \"" + args[i] + "\" is invalid.",
@@ -78,7 +87,7 @@ public final class Excellence {
     }
 
     try {
-      model = initializeAnimationModel(inputFileName);
+      model = initializeAnimationModel(inputFileName, canRotate, hasLayers);
     }
     catch (IllegalArgumentException e) {
       JOptionPane.showMessageDialog(frame,
@@ -88,10 +97,15 @@ public final class Excellence {
       System.exit(-1);
     }
 
-    Timer t = new Timer();
     IController controller;
 
     switch (viewType) {
+      case "provider":
+        IModel m = new cs3500.animator.adapter.AnimationModel(model);
+        cs3500.animator.adapter.IController c =
+                new Controller(m, integerTicksPerSecond);
+        c.setController();
+        break;
       case "text":
         textView = new TextView(model, outputFileName);
         textView.write();
@@ -102,12 +116,14 @@ public final class Excellence {
         break;
       case "visual":
         visualView = new SwingView(model);
-        controller = new AnimationController(model, visualView, integerTicksPerSecond);
+        controller = new AnimationController(model, visualView, integerTicksPerSecond, canRotate,
+                hasLayers);
         controller.start();
         break;
       case "edit":
-        interactiveView = new InteractiveView(model, integerTicksPerSecond);
-        controller = new AnimationController(model, interactiveView, integerTicksPerSecond, true);
+        interactiveView = new InteractiveView(model, integerTicksPerSecond, canRotate, hasLayers);
+        controller = new AnimationController(model, interactiveView, integerTicksPerSecond,
+                true, canRotate, hasLayers);
         controller.start();
         break;
       default:
@@ -124,7 +140,9 @@ public final class Excellence {
    * @param inputFileName the file name of the input file
    * @return an AnimationOperations model
    */
-  private static AnimationOperations initializeAnimationModel(String inputFileName) {
+  private static AnimationOperations initializeAnimationModel(String inputFileName,
+                                                              boolean canRotate,
+                                                              boolean hasLayers) {
     Readable in;
     try {
       in = new FileReader(inputFileName);
@@ -132,7 +150,7 @@ public final class Excellence {
       throw new IllegalArgumentException(e.getMessage());
     }
     AnimationBuilder<AnimationModel> builder = new AnimationModel.Builder();
-    AnimationReader.parseFile(in, builder);
+    AnimationReader.parseFile(in, builder, canRotate, hasLayers);
     return builder.build();
   }
 }

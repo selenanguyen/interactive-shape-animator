@@ -13,13 +13,17 @@ public abstract class AbstractShape implements Shape {
   protected Color color;
   protected Position position;
   protected boolean isVisible;
+  protected int rotation;
+  protected int layer;
 
-  protected AbstractShape(String id) {
+  protected AbstractShape(String id, int layer) {
     this.id = id;
+    this.layer = layer;
     this.makeInvisible();
   }
 
-  protected AbstractShape(String id, int height, int width, Color color, Position position) {
+  protected AbstractShape(String id, int height, int width, Color color, Position position,
+                          int rot, int layer) {
     if (id == null || height < 0 || width < 0 || color == null || position == null) {
       throw new IllegalArgumentException("All shape fields must not be initialized "
               + "to null or negative");
@@ -34,6 +38,8 @@ public abstract class AbstractShape implements Shape {
     this.color = color;
     this.isVisible = true;
     this.position = position;
+    this.rotation = rot;
+    this.layer = layer;
   }
 
   @Override
@@ -69,9 +75,15 @@ public abstract class AbstractShape implements Shape {
   }
 
   @Override
+  public int getLayer() {
+    return this.layer;
+  }
+
+  @Override
   public void makeInvisible() {
     this.height = -1;
     this.width = -1;
+    this.rotation = 0;
     this.color = null;
     this.position = null;
     this.isVisible = false;
@@ -140,7 +152,7 @@ public abstract class AbstractShape implements Shape {
     if (!this.isVisible) {
       return this.id.hashCode();
     }
-    return Integer.hashCode(this.height + this.width)
+    return Integer.hashCode(this.height + this.width + this.rotation)
             + id.hashCode() + getShapeAsString().hashCode()
             + this.position.hashCode();
   }
@@ -156,11 +168,27 @@ public abstract class AbstractShape implements Shape {
   }
 
   @Override
-  public void setState(int height, int width, Color color, Position position) {
+  public void setRotation(int rot) {
+    this.rotation = rot;
+  }
+
+  @Override
+  public int getRotation() {
+    return this.rotation;
+  }
+
+  @Override
+  public void setState(int height, int width, Color color, int rotation, Position position) {
     this.setPosition(position);
     this.setWidth(width);
     this.setColor(color);
     this.setHeight(height);
+    this.setRotation(rotation);
     this.isVisible = true;
+  }
+
+  @Override
+  public void setLayer(int l) {
+    this.layer = l;
   }
 }

@@ -139,6 +139,30 @@ public class AnimatedShape implements IAnimatedShape {
     throw new IllegalArgumentException("No action occurs at tick " + tick);
   }
 
+  @Override
+  public void editKeyframe(Keyframe kf) {
+    System.out.println(this.actions);
+    for (int i = 0; i < this.keyframes.size(); i++) {
+      if (keyframes.get(i).getTick() == kf.getTick()) {
+        this.keyframes.remove(i);
+        this.keyframes.add(i, kf);
+      }
+    }
+    for (int i = 0; i < this.actions.size(); i++) {
+      Action a = this.actions.get(i);
+      if (a.getEndKeyframe().getTick() == kf.getTick()) {
+        this.actions.remove(i);
+        this.actions.add(i, new Action(a.getStartKeyframe(), kf));
+      }
+      if (a.getStartKeyframe().getTick() == kf.getTick()) {
+        Action a1 = this.actions.get(i);
+        this.actions.remove(i);
+        this.actions.add(i, new Action(kf, a1.getEndKeyframe()));
+      }
+    }
+    System.out.println(this.actions);
+  }
+
   /**
    * Returns whether a keyframe exists at the given tick.
    * @param tick the tick
@@ -151,6 +175,11 @@ public class AnimatedShape implements IAnimatedShape {
       }
     }
     return false;
+  }
+
+  @Override
+  public void setLayer(int l) {
+    this.shape.setLayer(l);
   }
 
   /**
@@ -293,7 +322,7 @@ public class AnimatedShape implements IAnimatedShape {
 
   @Override
   public IAnimatedShape makeCopy() {
-    IAnimatedShape copy = new AnimatedShape(this.shape.makeCopy(), this.keyframes);
+    IAnimatedShape copy = new AnimatedShape(this.shape.cloneShape(), this.keyframes);
     return copy;
   }
 
@@ -477,5 +506,10 @@ public class AnimatedShape implements IAnimatedShape {
       throw new IllegalArgumentException("No keyframes exist");
     }
     return this.keyframes.get(0).getTick();
+  }
+
+  @Override
+  public int getLayer() {
+    return this.shape.getLayer();
   }
 }

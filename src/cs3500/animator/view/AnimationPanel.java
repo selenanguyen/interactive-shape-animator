@@ -48,6 +48,13 @@ public class AnimationPanel extends JPanel {
               : new Rectangle.Double(s.getPosition().getX() - model.getCanvasStartingX(),
               s.getPosition().getY() - model.getCanvasStartingY(),
               s.getWidth(), s.getHeight());
+      if (s.getRotation() != 0) {
+        AffineTransform tx = new AffineTransform();
+        tx.rotate(Math.toRadians(s.getRotation()),
+                s.getPosition().getX() - model.getCanvasStartingX() + (s.getWidth() / 2),
+                s.getPosition().getY() - model.getCanvasStartingY() + (s.getHeight() / 2));
+        shape = tx.createTransformedShape(shape);
+      }
       g2d.setColor(new Color(s.getColor().getR(), s.getColor().getG(), s.getColor().getB()));
       g2d.fill(shape);
     }

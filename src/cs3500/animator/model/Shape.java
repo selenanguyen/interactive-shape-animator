@@ -81,16 +81,18 @@ public interface Shape {
    */
   String getShapeAsString(TextualView view);
 
-  /**
-   * Makes a copy of a shape.
-   * @return a copy of the shape
-   */
-  Shape makeCopy();
+  void setRotation(int rot);
 
   void makeInvisible();
 
-  void setState(int height, int width, Color color, Position position);
+  void setState(int height, int width, Color color, int rot, Position position);
 
   void applyKeyframe(Keyframe kf);
+
+  int getRotation();
+
+  int getLayer();
+
+  void setLayer(int l);
 
 }

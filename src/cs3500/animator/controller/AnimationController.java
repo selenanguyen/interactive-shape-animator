@@ -35,14 +35,16 @@ public class AnimationController implements IController {
   private AnimationOperations model;
   private final VisualView view;
   private final JFrame messageFrame = new JFrame("Animator");
+  private final boolean canRotate;
 
   // Represent the state of the animation
   private int tick = 1;
   private boolean isPlaying = false;
   private boolean suppressSuccessMessages = false;
   private boolean hasEnded = false;
-  private boolean enableLooping = true; // default = true?
+  private boolean enableLooping = true;
   private boolean enableEditing = false;
+  private final boolean hasLayers;
 
   // speed of the animation in ticks per second
   private final int DEFAULT_SPEED = 1;
@@ -50,13 +52,9 @@ public class AnimationController implements IController {
   private Timer t = new Timer();
 
   // Text fields
-  private String addShapeId = "";
+  //private String addShapeId = "";
   private String removeShapeId = "";
   private String editShapeId = "";
-
-  // TODO: combine resume/start button -> play button
-  // TODO: test looping
-  // TODO: visual view vs interactive view...
 
   /**
    * Constructor of the Animation model controller.
@@ -65,6 +63,17 @@ public class AnimationController implements IController {
    * @param speed speed of the animation
    */
   public AnimationController(AnimationOperations m, VisualView v, int speed) {
+    this(m, v, speed, false, false);
+  }
+
+  /**
+   * Constructor of the Animation model controller.
+   * @param m animation model
+   * @param v visual view
+   * @param speed speed of the animation
+   */
+  public AnimationController(AnimationOperations m, VisualView v, int speed, boolean canRotate,
+                             boolean hasLayers) {
     if (v == null || m == null) {
       throw new IllegalArgumentException("Your model or view cannot be null");
     }
@@ -76,6 +85,8 @@ public class AnimationController implements IController {
     } else {
       this.speed = speed;
     }
+    this.canRotate = canRotate;
+    this.hasLayers = hasLayers;
   }
 
   /**
@@ -88,17 +99,20 @@ public class AnimationController implements IController {
    */
   public AnimationController(AnimationOperations m, IInteractiveView v, int speed,
                              boolean enableEditing) {
-    if (m == null || v == null) {
-      throw new IllegalArgumentException("Your model or view cannot be null");
-    }
-    this.model = m;
-    this.view = v;
-    this.speed = DEFAULT_SPEED;
-    if (speed <= 0) {
-      throw new IllegalArgumentException("Speed cannot be negative or zero");
-    } else {
-      this.speed = speed;
-    }
+    this(m, v, speed, enableEditing, false);
+  }
+
+  /**
+   * Constructor of the Animation model control that also takes in a boolean to enable
+   * editing of the animation or not.
+   * @param m animation model
+   * @param v visual view
+   * @param speed speed of the animation
+   * @param enableEditing boolean for enabling editing or not
+   */
+  public AnimationController(AnimationOperations m, IInteractiveView v, int speed,
+                             boolean enableEditing, boolean canRotate, boolean hasLayers) {
+    this(m, (VisualView) v, speed, canRotate, hasLayers);
     if (enableEditing) {
       v.setListener(this);
     }
@@ -199,33 +213,6 @@ public class AnimationController implements IController {
           displayError("Looping is already disabled");
         }
         break;
-      case "Add Oval":
-        if (isShapeIdValid(addShapeId)) {
-          try {
-            this.model.addShape(new Oval(addShapeId));
-            displaySuccess("Oval " + addShapeId + " added");
-            view.refresh();
-          }
-          catch (IllegalArgumentException err) {
-            displayError(err.getMessage());
-          }
-        }
-        break;
-      case "Add Rectangle":
-        if (isShapeIdValid(addShapeId)) {
-          try {
-            this.model.addShape(new Rectangle(addShapeId));
-            displaySuccess("Rectangle " + addShapeId + " added");
-            view.refresh();
-          }
-          catch (IllegalArgumentException err) {
-            displayError(err.getMessage());
-          }
-        }
-        else {
-          displayError("You must enter the shape's name");
-        }
-        break;
       case "Remove Shape":
         if (isShapeIdValid(removeShapeId)) {
           try {
@@ -247,7 +234,7 @@ public class AnimationController implements IController {
         }
         AnimationBuilder<AnimationModel> builder = new AnimationModel.Builder();
         try {
-          AnimationReader.parseFile(in, builder);
+          AnimationReader.parseFile(in, builder, this.canRotate, this.hasLayers);
           AnimationOperations newModel = builder.build();
           this.model.clear();
           for (IAnimatedShape animatedShape : newModel.getAnimatedShapes()) {
@@ -290,8 +277,34 @@ public class AnimationController implements IController {
   }
 
   @Override
-  public void setAddShapeId(String id) {
-    this.addShapeId = id;
+  public void addShape(String type, String id, String layer) {
+    if (!isShapeIdValid(id) || layer.length() == 0) {
+      displayError("Enter a shape id and layer number");
+      return;
+    }
+    try {
+      int l = Integer.parseInt(layer);
+      if (type.equals("oval")) {
+        model.addShape(new Oval(id, l));
+        displaySuccess("Added shape " + id);
+        view.refresh();
+      }
+      else if (type.equals("rectangle")) {
+        model.addShape(new Rectangle(id, l));
+        displaySuccess("Added shape " + id);
+        view.refresh();
+      }
+      else {
+        displayError("Invalid shape type");
+        return;
+      }
+    }
+    catch (NumberFormatException e) {
+      displayError("Layer must be an integer.");
+    }
+    catch (IllegalArgumentException e) {
+      displayError(e.getMessage());
+    }
   }
 
   private boolean isShapeIdValid(String addShapeId) {
@@ -378,37 +391,14 @@ public class AnimationController implements IController {
   }
 
   @Override
-  public void addKeyframe(String id, String c, String p, String w, String h, int tick) {
+  public void addKeyframe(String id, String c, String p, String rot,
+                          String w, String h, int tick) {
     try {
-      String errorMsg = "Enter color in the form (r,g,b)";
-      if (c.charAt(0) != '(' | c.charAt(c.length() - 1) != ')') {
-        displayError(errorMsg);
-      }
-      String[] values = c.split(",");
-      values[0] = values[0].substring(1);
-      values[2] = values[2].substring(0, values[2].length() - 1);
-      String str = String.join("\n", values);
-      Scanner scan = new Scanner(new StringReader(str));
-      int r = scan.nextInt();
-      int g = scan.nextInt();
-      int b = scan.nextInt();
-
-      errorMsg = "Enter position in the form (x,y)";
-      if (p.charAt(0) != '(' | p.charAt(p.length() - 1) != ')') {
-        displayError(errorMsg);
-      }
-      values = p.split(",");
-      values[0] = values[0].substring(1);
-      values[1] = values[1].substring(0, values[1].length() - 1);
-      str = String.join("\n",  values);
-      scan = new Scanner(new StringReader(str));
-      int x = scan.nextInt();
-      int y = scan.nextInt();
-
-      Keyframe kf = new Keyframe(new Color(r, g, b), new Position(x, y), Integer.parseInt(w),
-              Integer.parseInt(h), tick);
+      Keyframe kf = getKeyframe(id, c, p, rot, w, h, tick);
       model.addKeyFrame(id, kf);
-      displaySuccess("Added keyframe " + kf.toString());
+      if (!this.suppressSuccessMessages) {
+        displaySuccess("Added keyframe " + kf.toString());
+      }
     }
     catch (IllegalArgumentException e) {
       displayError(e.getMessage());
@@ -425,14 +415,44 @@ public class AnimationController implements IController {
     }
   }
 
+  private Keyframe getKeyframe(String id, String c, String p,
+                               String rot, String w, String h, int tick) {
+    String errorMsg = "Enter color in the form (r,g,b)";
+    if (c.charAt(0) != '(' | c.charAt(c.length() - 1) != ')') {
+      displayError(errorMsg);
+    }
+    String[] values = c.split(",");
+    values[0] = values[0].substring(1);
+    values[2] = values[2].substring(0, values[2].length() - 1);
+    String str = String.join("\n", values);
+    Scanner scan = new Scanner(new StringReader(str));
+    int r = scan.nextInt();
+    int g = scan.nextInt();
+    int b = scan.nextInt();
+
+    errorMsg = "Enter position in the form (x,y)";
+    if (p.charAt(0) != '(' | p.charAt(p.length() - 1) != ')') {
+      displayError(errorMsg);
+    }
+    values = p.split(",");
+    values[0] = values[0].substring(1);
+    values[1] = values[1].substring(0, values[1].length() - 1);
+    str = String.join("\n",  values);
+    scan = new Scanner(new StringReader(str));
+    int x = scan.nextInt();
+    int y = scan.nextInt();
+
+    return new Keyframe(new Color(r, g, b), new Position(x, y), Integer.parseInt(w),
+            Integer.parseInt(h), Integer.parseInt(rot), tick);
+  }
+
   @Override
-  public void replaceKeyframe(String id, String c, String p, String w, String h, int tick) {
+  public void replaceKeyframe(String id, String c, String p, String rot, String w,
+                              String h, int tick) {
     this.toggleSuppressSuccessMessages();
-    removeKeyframe(id, tick);
-    addKeyframe(id, c, p, w, h, tick);
+    model.editKeyframe(id, getKeyframe(id, c, p, rot, w, h, tick));
     this.toggleSuppressSuccessMessages();
     displaySuccess("Successfully edited shape " + id + " at tick " + tick);
-
   }
 
   @Override
@@ -442,5 +462,48 @@ public class AnimationController implements IController {
 
   private void toggleSuppressSuccessMessages() {
     this.suppressSuccessMessages = !this.suppressSuccessMessages;
+  }
+
+  @Override
+  public void removeLayer(String l) {
+    try {
+      Integer lay = getInt(l, "Layer");
+      if (lay == null) {
+        return;
+      }
+      model.removeLayer(lay);
+      displaySuccess("Removed all shapes in layer " + l);
+    }
+    catch (IllegalArgumentException e) {
+      displayError(e.getMessage());
+    }
+    ((IInteractiveView) view).refreshAnimation();
+  }
+
+  private Integer getInt(String i, String fieldName) {
+    try {
+      return Integer.parseInt(i);
+    }
+    catch (NumberFormatException e) {
+      displayError(fieldName + " must be an integer");
+      return null;
+    }
+  }
+
+  @Override
+  public void switchLayers(String l1, String l2) {
+    Integer lay1 = getInt(l1, "Each layer");
+    Integer lay2 = getInt(l2, "Each layer");
+    if (lay1 == null || lay2 == null) {
+      return;
+    }
+    try {
+      this.model.switchLayers(lay1, lay2);
+      displaySuccess("Switched shapes in layers " + l1 + " and " + l2);
+    }
+    catch (IllegalArgumentException e) {
+      displayError(e.getMessage());
+    }
+    ((IInteractiveView) view).refreshAnimation();
   }
 }

@@ -121,4 +121,14 @@ public interface IAnimatedShape {
    * @return the list of keyframes
    */
   List<Keyframe> getKeyframes();
+
+  /**
+   * Returns the layer on which this shape lies.
+   * @return the layer
+   */
+  int getLayer();
+
+  void editKeyframe(Keyframe kf);
+
+  void setLayer(int l);
 }

@@ -13,6 +13,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JSlider;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -25,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -51,18 +53,18 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
   private ButtonNames editType;
   private String shapeEdit = "";
   private Keyframe keyFrameToEdit = null;
-  private final List<TextFieldNames> editKeyframeFields = new ArrayList<>(
-          Arrays.asList(TextFieldNames.POSITION_ADD_KEYFRAME,
-                  TextFieldNames.WIDTH_ADD_KEYFRAME,
-                  TextFieldNames.HEIGHT_ADD_KEYFRAME,
-                  TextFieldNames.COLOR_ADD_KEYFRAME));
+  private final JSlider scrubber;
+  private final List<TextFieldNames> editKeyframeFields;
+  private final boolean canRotate;
+  private final boolean hasLayers;
 
   /**
    * Constructor of the interactive view.
    * @param m read only animation operation model
    * @param s speed of the animation
    */
-  public InteractiveView(ReadOnlyAnimationOperations m, int s) {
+  public InteractiveView(ReadOnlyAnimationOperations m, int s, boolean canRotate,
+                         boolean hasLayers) {
     if (m == null) {
       throw new IllegalArgumentException("The model can't be null");
     }
@@ -70,6 +72,21 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
     if (s <= 0) {
       throw new IllegalArgumentException("The speed can't be negative or 0");
     }
+
+    this.canRotate = canRotate;
+    this.hasLayers = hasLayers;
+
+    this.editKeyframeFields = canRotate ? new ArrayList<>(
+            Arrays.asList(TextFieldNames.POSITION_ADD_KEYFRAME,
+                    TextFieldNames.ROTATION_ADD_KEYFRAME,
+                    TextFieldNames.WIDTH_ADD_KEYFRAME,
+                    TextFieldNames.HEIGHT_ADD_KEYFRAME,
+                    TextFieldNames.COLOR_ADD_KEYFRAME))
+            : new ArrayList<>(
+            Arrays.asList(TextFieldNames.POSITION_ADD_KEYFRAME,
+                    TextFieldNames.WIDTH_ADD_KEYFRAME,
+                    TextFieldNames.HEIGHT_ADD_KEYFRAME,
+                    TextFieldNames.COLOR_ADD_KEYFRAME));
 
     this.model = m;
 
@@ -81,13 +98,17 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
 
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-    // Adding the view panel...
+    // Adding the view panel
     AnimationPanel animationPanel = new AnimationPanel(model);
     animationPanel.setPreferredSize(new Dimension(model.getCanvasWidth(),
             model.getCanvasHeight()));
     animationPanel.setLocation(model.getCanvasStartingX(), model.getCanvasStartingY());
     this.add(new JScrollPane(animationPanel), BorderLayout.EAST);
     this.animationPanel = animationPanel;
+
+    // Adding the scrubber
+    this.scrubber = new JSlider(1, model.getLastTick(), 1);
+    this.setScrubber();
 
     // Adding a button panel to the bottom of the VIEW panel
     buttonPanel = new JPanel();
@@ -127,23 +148,58 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
 
   @Override
   public void refreshAnimation() {
+    this.scrubber.setValue(model.getTick());
     this.animationPanel.repaint();
+  }
+
+  private void setScrubber() {
+    int lastTick = model.getLastTick();
+    this.scrubber.setMaximum(lastTick);
+    this.scrubber.setMajorTickSpacing((lastTick - 1) / 4);
+    this.scrubber.setPaintTicks(true);
+    Hashtable position = new Hashtable();
+    position.put(1, new JLabel("1"));
+    position.put((lastTick - 1) / 2, new JLabel(Integer.toString(lastTick / 2)));
+    position.put(lastTick, new JLabel(Integer.toString(lastTick)));
+    this.scrubber.setLabelTable(position);
+    this.scrubber.setPaintLabels(true);
   }
 
   @Override
   public void setListener(IController listener) {
     textFieldMap.get(TextFieldNames.SET_SPEED).setText(Integer.toString(listener.getSpeed()));
-    // Add shape listener
-    ActionListener al = (e) -> {
-      listener.setAddShapeId(textFieldMap.get(TextFieldNames.NAME_ADD_SHAPE).getText());
-      listener.actionPerformed(e);
+    // Add scrubber listener
+    this.scrubber.addChangeListener((e) -> {
+      listener.setTick(((JSlider) e.getSource()).getValue());
+    });
+    // Add shape listeners
+    ActionListener addOval;
+    ActionListener addRectangle;
+    addOval = (e) -> {
+      String l = hasLayers ? textFieldMap.get(TextFieldNames.LAYER_ADD_SHAPE).getText() : "0";
+      listener.addShape("oval", textFieldMap.get(TextFieldNames.NAME_ADD_SHAPE).getText(), l);
     };
-    this.buttonMap.get(ButtonNames.ADD_OVAL).addActionListener(al);
-    this.buttonMap.get(ButtonNames.ADD_RECT).addActionListener(al);
+    addRectangle = (e) -> {
+      String l = hasLayers ? textFieldMap.get(TextFieldNames.LAYER_ADD_SHAPE).getText() : "0";
+      listener.addShape("rectangle", textFieldMap.get(TextFieldNames.NAME_ADD_SHAPE).getText(),
+              l);
+    };
+    this.buttonMap.get(ButtonNames.ADD_OVAL).addActionListener(addOval);
+    this.buttonMap.get(ButtonNames.ADD_RECT).addActionListener(addRectangle);
 
+    // Other layer listeners
+    if (hasLayers) {
+      this.buttonMap.get(ButtonNames.REMOVE_LAYER).addActionListener((e) -> {
+        listener.removeLayer(textFieldMap.get(TextFieldNames.LAYER_REMOVE).getText());
+      });
+
+      this.buttonMap.get(ButtonNames.SWITCH_LAYERS).addActionListener((e) -> {
+        listener.switchLayers(textFieldMap.get(TextFieldNames.LAYER1_SWITCH).getText(),
+                textFieldMap.get(TextFieldNames.LAYER2_SWITCH).getText());
+      });
+    }
     // Remove shape listener
     this.buttonMap.get(ButtonNames.REMOVE_SHAPE).addActionListener((e) -> {
-      //listener.setRemoveShapeId(textFieldMap.get(TextFieldNam));
       if (shapeList.getSelectedIndex() == -1) {
         listener.displayError("No shape to remove");
         return;
@@ -171,13 +227,9 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
       }
       framesList = new JComboBox(frameTickList.toArray());
       setSelectedFrameIndex(0);
-      //editKeyframeOptionsPanel.repaint();
       this.refresh();
-      //keyFrameToEdit = new Keyframe(getSelectedKeyframe().getTick());
-      //editKeyframeOptionsPanel.repaint();
     });
 
-    // TODO: set when enableKeyframeEdit -> false
     // Set edit keyframes listener
     this.buttonMap.get(ButtonNames.EDIT_KEYFRAME_OPTION).addActionListener((e) -> {
       if (model.getKeyframes(shapeEdit).isEmpty()) {
@@ -254,6 +306,8 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
         listener.replaceKeyframe(shapeEdit,
                 textFieldMap.get(TextFieldNames.COLOR_ADD_KEYFRAME).getText(),
                 textFieldMap.get(TextFieldNames.POSITION_ADD_KEYFRAME).getText(),
+                this.canRotate ? textFieldMap.get(TextFieldNames.ROTATION_ADD_KEYFRAME).getText()
+                        : "0",
                 textFieldMap.get(TextFieldNames.WIDTH_ADD_KEYFRAME).getText(),
                 textFieldMap.get(TextFieldNames.HEIGHT_ADD_KEYFRAME).getText(),
                 keyFrameToEdit.getTick());
@@ -262,9 +316,12 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
         listener.addKeyframe(shapeEdit,
                 textFieldMap.get(TextFieldNames.COLOR_ADD_KEYFRAME).getText(),
                 textFieldMap.get(TextFieldNames.POSITION_ADD_KEYFRAME).getText(),
+                this.canRotate ? textFieldMap.get(TextFieldNames.ROTATION_ADD_KEYFRAME).getText()
+                  : "0",
                 textFieldMap.get(TextFieldNames.WIDTH_ADD_KEYFRAME).getText(),
                 textFieldMap.get(TextFieldNames.HEIGHT_ADD_KEYFRAME).getText(),
                 keyFrameToEdit.getTick());
+        this.refreshScrubber();
       }
       listener.setTick(keyFrameToEdit.getTick());
       updateFramesList();
@@ -297,6 +354,13 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
   public void actionPerformed(ActionEvent e) {
     if (e == null) {
       throw new IllegalArgumentException("Action event cannot be null");
+    }
+  }
+
+  private void refreshScrubber() {
+    if (this.scrubber.getMaximum() != model.getLastTick()) {
+      this.setScrubber();
+      this.scrubber.repaint();
     }
   }
 
@@ -349,6 +413,9 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
             break;
           case HEIGHT_ADD_KEYFRAME:
             toString = Integer.toString(kf.getHeight());
+            break;
+          case ROTATION_ADD_KEYFRAME:
+            toString = Integer.toString(kf.getRotation());
             break;
           default:
             toString = "";
@@ -431,6 +498,7 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
   private void fillPlayButtonPanel() {
     JPanel playButtonPanel = new JPanel();
     playButtonPanel.setLayout(new FlowLayout());
+    playButtonPanel.add(scrubber);
     for (ButtonNames name : animationButtons) {
       playButtonPanel.add(this.buttonMap.get(name));
     }
@@ -471,12 +539,34 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
 
 
     // row 1
-    rows.add(getAboveAndBelowPanel(getLabel(TextFieldNames.NAME_ADD_SHAPE),
-            getSideBySidePanel(textFieldMap.get(TextFieldNames.NAME_ADD_SHAPE),
-                    getSideBySidePanel(buttonMap.get(ButtonNames.ADD_OVAL),
-                            buttonMap.get(ButtonNames.ADD_RECT)))));
+    if (!this.hasLayers) {
+      rows.add(getAboveAndBelowPanel(getLabel(TextFieldNames.NAME_ADD_SHAPE),
+              getSideBySidePanel(textFieldMap.get(TextFieldNames.NAME_ADD_SHAPE),
+                      getSideBySidePanel(buttonMap.get(ButtonNames.ADD_OVAL),
+                              buttonMap.get(ButtonNames.ADD_RECT)))));
+    }
+    else {
+      rows.add(getAboveAndBelowPanel(
+              getSideBySidePanel(getLabel(TextFieldNames.NAME_ADD_SHAPE),
+                      getLabel(TextFieldNames.LAYER_ADD_SHAPE), new JPanel()),
+              getSideBySidePanel(textFieldMap.get(TextFieldNames.NAME_ADD_SHAPE),
+                      textFieldMap.get(TextFieldNames.LAYER_ADD_SHAPE),
+                      getSideBySidePanel(buttonMap.get(ButtonNames.ADD_OVAL),
+                              buttonMap.get(ButtonNames.ADD_RECT)))));
+      // row 2 (remove layer)
+      rows.add(getAboveAndBelowPanel(getLabel(TextFieldNames.LAYER_REMOVE),
+              getSideBySidePanel(textFieldMap.get(TextFieldNames.LAYER_REMOVE),
+                      buttonMap.get(ButtonNames.REMOVE_LAYER))));
+      // row 3 (switch layers)
+      rows.add(getAboveAndBelowPanel(
+              getSideBySidePanel(getLabel(TextFieldNames.LAYER1_SWITCH),
+                      getLabel(TextFieldNames.LAYER2_SWITCH), new JPanel()),
+              getSideBySidePanel(textFieldMap.get(TextFieldNames.LAYER1_SWITCH),
+                      textFieldMap.get(TextFieldNames.LAYER2_SWITCH),
+                      buttonMap.get(ButtonNames.SWITCH_LAYERS))));
+    }
 
-    // row 2
+    // row 4
     rows.add(getAboveAndBelowPanel(new JLabel("Edit shape:"),
             getSideBySidePanel(shapeList,
                     buttonMap.get(ButtonNames.REMOVE_SHAPE),
@@ -524,12 +614,12 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
       }
     }
 
+
     editAnimationPanel.setLayout(new GridLayout(rows.size(), 1));
     editAnimationPanel.removeAll();
     for (JComponent c : rows) {
       this.editAnimationPanel.add(c);
     }
-
     this.pack();
   }
 
@@ -559,7 +649,8 @@ public class InteractiveView extends JFrame implements IInteractiveView, ActionL
         super.repaint();
       }
     };
-    panel.setLayout(new GridLayout(2, 2));
+    int numRows = this.canRotate ? 3 : 2;
+    panel.setLayout(new GridLayout(numRows, 2));
     for (TextFieldNames name : editKeyframeFields) {
       panel.add(getTextFieldPanel(name));
     }

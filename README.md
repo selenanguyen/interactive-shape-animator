@@ -116,3 +116,22 @@ The actions available to the user delegated by the Interactive View :
 * Add Keyframe
 * Remove Keyframe
 * Save Keyframe (after editing)
+
+<h3>Working with the Provider</h3>
+
+While we were able to set up our own model and controller adapters for the provider's views, we
+were unfortunately unable to use the provider's view to properly display our animation. Their views 
+were missing key implementation of any feature the animator would have. 
+
+Our providers later clarified that their view was not functioning, so our hybrid view shows a blank 
+window, as its panels are never painted. However, we were able to verify that the data being sent to the 
+views from our model was accurate. Our new model adapter accurately translates our old model class to 
+our providers’ IModel interface.
+
+In our InteractiveNewVisualView class, which extends their interactive view and implements our own 
+interactive view interface (so that it can be used by our controller), we removed and re-added their 
+NewViewPanel so that we can invoke the addActionListener method. We ignored unnecessary 
+reimplementations of methods such as setListeners(), updateComboBoxes(), and getLoadFileName() because 
+the provider did not include this functionality in their own views. 
+
+### See our reviews of our providers' code and our experience in <code>./resources/Reviews.pdf</code>

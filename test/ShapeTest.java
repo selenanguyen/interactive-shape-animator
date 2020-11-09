@@ -26,70 +26,75 @@ public class ShapeTest {
     zero = new Position(0, 0);
     neg = new Position( -1, -1);
     red = new Color(255, 0, 0);
-    circle = new Oval("circle", 5, 5, red, zero);
-    rectangle = new Rectangle("rectangle", 5, 5, red, zero);
+    circle = new Oval("circle", 5, 5, red, zero, 0, 0);
+    rectangle = new Rectangle("rectangle", 5, 5, red, zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testOvalBadColor() {
     Color bad = new Color(256, 256, 256);
-    Shape oval = new Oval("oval", 5, 5, bad, zero);
+    Shape oval = new Oval("oval", 5, 5, bad, zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testOvalNullId() {
-    Shape oval = new Oval(null, 5, 5, red, zero);
+    Shape oval = new Oval(null, 5, 5, red, zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testOvalNegHeight() {
-    Shape oval = new Oval("oval", -1, 5, red, zero);
+    Shape oval = new Oval("oval", -1, 5, red, zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testOvalNegWidth() {
-    Shape oval = new Oval("oval", 5, -1, red, zero);
+    Shape oval = new Oval("oval", 5, -1, red, zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testOvalNullColor() {
-    Shape oval = new Oval("oval", 5, 5, null, zero);
+    Shape oval = new Oval("oval", 5, 5, null, zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testRectNegHeight() {
-    Shape rect = new Rectangle("rect", -5, 5, red, zero);
+    Shape rect = new Rectangle("rect", -5, 5, red, zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testRectNegWidth() {
-    Shape rect = new Rectangle("rect",5, -5, red, zero);
+    Shape rect = new Rectangle("rect",5, -5, red,
+            zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testRectBadColor() {
     Color bad = new Color(256, 256, 256);
-    Shape rect = new Rectangle("rect", 5, 5, bad, zero);
+    Shape rect = new Rectangle("rect", 5, 5, bad, zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testRectNullId() {
-    Shape rect = new Rectangle(null, 5, 5, red, zero);
+    Shape rect = new Rectangle(null, 5, 5, red,
+            zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testRectNullHeight() {
-    Shape rect = new Rectangle("rect", -1, 5, red, zero);
+    Shape rect = new Rectangle("rect", -1, 5, red,
+            zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testRectNullWidth() {
-    Shape rect = new Rectangle("rect", 5, -1, red, zero);
+    Shape rect = new Rectangle("rect", 5, -1, red,
+            zero, 0, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testRectNullColor() {
-    Shape rect = new Rectangle("rect", 5, 5, null, zero);
+    Shape rect = new Rectangle("rect", 5, 5, null,
+            zero, 0, 0);
   }
 
   @Test

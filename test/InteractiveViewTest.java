@@ -26,7 +26,7 @@ public class InteractiveViewTest {
   @Test
   public void testNullModel() {
     try {
-      new InteractiveView(null, speed);
+      new InteractiveView(null, speed, false, false);
     }
     catch (IllegalArgumentException e) {
       assertEquals("The model can't be null", e.getMessage());
@@ -39,7 +39,7 @@ public class InteractiveViewTest {
   @Test
   public void testNegativeTempo() {
     try {
-      new InteractiveView(model, -1);
+      new InteractiveView(model, -1, false, false);
     }
     catch (IllegalArgumentException e) {
       assertEquals("The speed can't be negative or 0", e.getMessage());

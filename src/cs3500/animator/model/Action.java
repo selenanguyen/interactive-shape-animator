@@ -17,6 +17,8 @@ public final class Action {
   private final int endHeight;
   private final Color startColor;
   private final Color endColor;
+  private final int startRot;
+  private final int endRot;
   private final int startTick;
   private final int endTick;
 
@@ -24,6 +26,7 @@ public final class Action {
   private final Map<Integer, Position> positions = new HashMap<Integer, Position>();
   private final Map<Integer, Integer> heights = new HashMap<Integer, Integer>();
   private final Map<Integer, Integer> widths = new HashMap<Integer, Integer>();
+  private final Map<Integer, Integer> rotations = new HashMap<>();
 
 
   /**
@@ -65,12 +68,67 @@ public final class Action {
     this.endColor = endColor;
     this.startTick = startTick;
     this.endTick = endTick;
+    this.startRot = 0;
+    this.endRot = 0;
     this.setShapeStates();
   }
 
+  /**
+   * Initializes an action with start and end rotations.
+   * @param startPos the start position
+   * @param endPos the end position
+   * @param startWidth the start width
+   * @param endWidth the end width
+   * @param startHeight the sstart height
+   * @param endHeight the end height
+   * @param startColor the start color
+   * @param endColor the end color
+   * @param startRot the start rotation
+   * @param endRot the end rotation
+   * @param startTick the start tick
+   * @param endTick the end tick
+   */
+  public Action(Position startPos, Position endPos, int startWidth, int endWidth,
+                int startHeight, int endHeight, Color startColor, Color endColor,
+                int startRot, int endRot,
+                int startTick, int endTick) {
+    if (startPos == null || endPos == null || startWidth < 0 || endWidth < 0
+            || startHeight < 0 || endHeight < 0 || startColor == null
+            || endColor == null) {
+      throw new IllegalArgumentException("Action fields can't be null or negative");
+    }
+    if (startTick <= 0 || endTick <= 0) {
+      throw new IllegalArgumentException("Start or end tick has to be greater than 0");
+    }
+    if (endTick < startTick) {
+      throw new IllegalArgumentException("End tick must be greater than start tick: "
+              + startTick + " to " + endTick);
+    }
+
+    this.startPos = startPos;
+    this.endPos = endPos;
+    this.startWidth = startWidth;
+    this.endWidth = endWidth;
+    this.startHeight = startHeight;
+    this.endHeight = endHeight;
+    this.startColor = startColor;
+    this.endColor = endColor;
+    this.startTick = startTick;
+    this.endTick = endTick;
+    this.startRot = startRot;
+    this.endRot = endRot;
+    this.setShapeStates();
+  }
+
+  /**
+   * Initializes an action using a start and end keyframe.
+   * @param kf1 the start kf
+   * @param kf2 the end kf
+   */
   public Action(Keyframe kf1, Keyframe kf2) {
     this(kf1.getPosition(), kf2.getPosition(), kf1.getWidth(), kf2.getWidth(), kf1.getHeight(),
-            kf2.getHeight(), kf1.getColor(), kf2.getColor(), kf1.getTick(), kf2.getTick());
+            kf2.getHeight(), kf1.getColor(), kf2.getColor(), kf1.getRotation(), kf2.getRotation(),
+            kf1.getTick(), kf2.getTick());
   }
 
   /**
@@ -80,7 +138,7 @@ public final class Action {
    * @return a shape
    */
   public Shape getShapeAt(Shape s, int tick) {
-    Shape copy = s.makeCopy();
+    Shape copy = s.cloneShape();
     applyTick(copy, tick);
     return copy;
   }
@@ -95,40 +153,46 @@ public final class Action {
       s.makeInvisible();
     }
     if (this.startTick == this.endTick) {
-      s.setState(endHeight, endWidth, endColor, endPos);
+      s.setState(endHeight, endWidth, endColor, endRot, endPos);
     }
     else {
-      s.setState(heights.get(tick), widths.get(tick), colors.get(tick), positions.get(tick));
+      s.setState(heights.get(tick), widths.get(tick), colors.get(tick), rotations.get(tick),
+              positions.get(tick));
     }
   }
 
   private void setShapeStates() {
-    int ticks = this.endTick - this.startTick;
+    double ticks = this.endTick - this.startTick;
     // Increments per tick:
-    int x = (endPos.getX() - startPos.getX());
-    int y = (endPos.getY() - startPos.getY());
-    int w = (endWidth - startWidth);
-    int h = (endHeight - startHeight);
-    int r = (endColor.getR() - startColor.getR());
-    int g = (endColor.getG() - startColor.getG());
-    int b = (endColor.getB() - startColor.getB());
+    double x = (endPos.getX() - startPos.getX());
+    double y = (endPos.getY() - startPos.getY());
+    double w = (endWidth - startWidth);
+    double h = (endHeight - startHeight);
+    double r = (endColor.getR() - startColor.getR());
+    double g = (endColor.getG() - startColor.getG());
+    double b = (endColor.getB() - startColor.getB());
+    double rot = (endRot - startRot);
 
     if (ticks != 0) {
-      x = x / ticks;
-      y = y / ticks;
-      w = w / ticks;
-      h = h / ticks;
-      r = r / ticks;
-      g = g / ticks;
-      b = b / ticks;
+      x = x / (double) ticks;
+      y = y / (double) ticks;
+      w = w / (double) ticks;
+      h = h / (double) ticks;
+      r = r / (double) ticks;
+      g = g / (double) ticks;
+      b = b / (double) ticks;
+      rot = rot / (double) ticks;
     }
     for (int i = 0; i <= endTick - startTick; i++) {
-      this.colors.put(startTick + i, new Color(startColor.getR() + r * i,
-              startColor.getG() + g * i, startColor.getB() + b * i));
-      this.positions.put(startTick + i, new Position(startPos.getX() + x * i,
-              startPos.getY() + y * i));
-      this.widths.put(startTick + i, startWidth + w * i);
-      this.heights.put(startTick + i, startHeight + h * i);
+
+      this.colors.put(startTick + i, new Color((int)Math.round(startColor.getR() + r * i),
+              (int)Math.round(startColor.getG() + g * i),
+              (int)Math.round(startColor.getB() + b * i)));
+      this.positions.put(startTick + i, new Position((int)Math.round(startPos.getX() + x * i),
+              (int)Math.round(startPos.getY() + y * i)));
+      this.widths.put(startTick + i, (int)Math.round(startWidth + w * i));
+      this.heights.put(startTick + i, (int)Math.round(startHeight + h * i));
+      this.rotations.put(startTick + i, (int)Math.round(startRot + rot * i));
     }
   }
 
@@ -204,15 +268,23 @@ public final class Action {
             || !this.startColor.equals(o.getEndColor())
             || this.startWidth != o.getEndWidth()
             || this.startHeight != o.getEndHeight()
-            || !this.startPos.equals(o.getEndPos());
+            || !this.startPos.equals(o.getEndPos())
+            || this.startRot != o.getEndRotation();
   }
 
   public Keyframe getStartKeyframe() {
-    return new Keyframe(startColor, startPos, startWidth, startHeight, startTick);
+    return new Keyframe(startColor, startPos, startWidth, startHeight, startRot, startTick);
   }
 
   public Keyframe getEndKeyframe() {
-    return new Keyframe(endColor, endPos, endWidth, endHeight, endTick);
+    return new Keyframe(endColor, endPos, endWidth, endHeight, endRot, endTick);
   }
 
+  public int getStartRotation() {
+    return this.startRot;
+  }
+
+  public int getEndRotation() {
+    return this.endRot;
+  }
 }

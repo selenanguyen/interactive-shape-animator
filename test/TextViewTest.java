@@ -36,7 +36,7 @@ public class TextViewTest {
   @Test
   public void testTextOneOvalShape() {
     Shape oval = new Oval("circle1", 10, 10,
-            new Color(255, 0,0), new Position(100, 100));
+            new Color(255, 0,0), new Position(100, 100), 0, 0);
     AnimationOperations model = new AnimationModel();
     model.addShape(oval);
     TextualView testView = new TextView(model, outputFileName);
@@ -49,7 +49,7 @@ public class TextViewTest {
   @Test
   public void testTextOneRectShape() {
     Shape oval = new Rectangle("rect1", 10, 10,
-            new Color(255, 0,0), new Position(100, 100));
+            new Color(255, 0,0), new Position(100, 100), 0, 0);
     AnimationOperations model = new AnimationModel();
     model.addShape(oval);
     TextualView testView = new TextView(model, outputFileName);
@@ -67,7 +67,7 @@ public class TextViewTest {
     Position p2 = new Position(110, 100);
     Position p3 = new Position(110, 110);
     Shape rect = new Rectangle("rect1", 10, 10,
-                red, p1);
+                red, p1, 0, 0);
     Action changeWidth = new Action(p1, p1,
             10, 11, 10, 10,
             red, red, 1, 10);
@@ -113,7 +113,7 @@ public class TextViewTest {
     Position p2 = new Position(110, 100);
     Position p3 = new Position(110, 110);
     Shape oval = new Oval("circle1", 10, 10,
-            red, p1);
+            red, p1, 0, 0);
     Action changeWidth = new Action(p1, p1,
             10, 11, 10, 10,
             red, red, 1, 10);
@@ -159,7 +159,7 @@ public class TextViewTest {
     Position p2 = new Position(110, 100);
     Position p3 = new Position(110, 110);
     Shape rect = new Rectangle("rect1", 10, 10,
-            red, p1);
+            red, p1, 0, 0);
     Action changeWidth = new Action(p1, p1,
             10, 11, 10, 10,
             red, red, 1, 10);
@@ -186,7 +186,7 @@ public class TextViewTest {
     model.addAction(rect.getId(), changeCenterY);
 
     Shape oval = new Oval("circle1", 10, 10,
-            red, p1);
+            red, p1, 0, 0);
     Action changeWidthO = new Action(p1, p1,
             10, 11, 10, 10,
             red, red, 1, 10);

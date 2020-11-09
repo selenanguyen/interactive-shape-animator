@@ -100,10 +100,10 @@ public class AnimatedShapeTest {
                             10, 10, 40, 40,
                             new Color(25, 25, 25), new Color(25, 25, 25),
                             6, 11)));
-    oval1 = new AnimatedShape(new Oval("oval1"));
-    rectangle1 = new AnimatedShape(new Rectangle("rectangle1"));
-    oval2 = new AnimatedShape(new Oval("oval1"), oval2Keyframes);
-    rectangle2 = new AnimatedShape(new Rectangle("rectangle1"), rectangle2Keyframes);
+    oval1 = new AnimatedShape(new Oval("oval1", 0));
+    rectangle1 = new AnimatedShape(new Rectangle("rectangle1", 0));
+    oval2 = new AnimatedShape(new Oval("oval1", 0), oval2Keyframes);
+    rectangle2 = new AnimatedShape(new Rectangle("rectangle1", 0), rectangle2Keyframes);
   }
 
   @Test
