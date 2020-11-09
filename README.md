@@ -1,6 +1,7 @@
 # Interactive Shape Animator
 ## Description
-This program runs an interactive shape animator, done for an assignment in Object Oriented Design. The program takes an input file (examples found in <code>/resources</code>) and offers different modes to run the animation.
+<p>This program runs an interactive shape animator, completed for an assignment in Object Oriented Design. The program takes an input file (examples found in <code>/resources</code>) and offers different modes to run the animation.</p>
+<p><b>Additional code samples from this course are available upon request.</b></p>
 
 ## Run the Program
 ### Steps
