@@ -18,7 +18,7 @@ This program runs an interactive shape animator, done for an assignment in Objec
   - <i>speed</i>: speed to play animation, in (integer) ticks per second
 
 ### Example command
-  <code>java -jar Animation.jar -in toh-3.txt -edit visual -speed 20</code>
+  <code>java -jar Animation.jar -in toh-3.txt -view edit -speed 20</code>
 
 ## Design and Process
 ### Our Model
